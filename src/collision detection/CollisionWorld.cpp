@@ -143,8 +143,9 @@ void CollisionWorld::build(const std::vector<GameObject*>& objects) {
         rootSize
     };
 
-    constexpr int capacity = 4;
+    constexpr int capacity = 6;
     constexpr int maxDepth = 10;
+    // to avoid objects being exactly the same size as cells (purely for visualisation purposes)
     constexpr float minCell = 2.f;
     tree = std::make_unique<Octree>(world, capacity, maxDepth, minCell, minCell, minCell);
 

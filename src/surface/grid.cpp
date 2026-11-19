@@ -27,7 +27,7 @@ Grid::Grid(vec3::Vector3 gridSize, float cellSize, float cellPadding, const Reso
 			for (int height = 0; height < gridSize.y; ++height)
 			{
 				vec3::Vector3 pos = vec3::Vector3(cols * cellSize, height * cellSize, rows * cellSize) - offset;
-				GroundCube cube = GroundCube(scale, pos, albescentWhite, bouquet, res);
+				GroundCube cube = GroundCube(scale, pos, periwinkleGray_01, bouquet, res);
 				cube.bIsSurface = true;
 				floor.push_back(cube);
 			}
@@ -57,15 +57,15 @@ Grid::Grid(vec3::Vector3 gridSize, float cellSize, float cellPadding, const Reso
 
 	obstacles.reserve(16);
 
-	addObstacleAt({ 2.0f, 1.0f, 2.0f }, 3.0f, 1.0f, 0.0f, bone, bouquet);
+	addObstacleAt({ 1.6f, 1.0f, 1.6f }, 3.0f, 1.0f, 0.0f, bone, bouquet);
 	addObstacleAt({ 0.8f, 1.0f, 0.8f }, 2.6f, 0.6f, 1.0f, thatch, bouquet);
 	addObstacleAt({ 0.8f, 3.0f, 0.8f }, 3.0f, 3.0f, 0.0f, cadetBlue, rum);
 
-	addObstacleAt({ 2.0f, 1.0f, 2.0f }, -5.0f, 3.0f, 0.0f, bone, bouquet);
+	addObstacleAt({ 1.6f, 1.0f, 1.6f }, -5.0f, 3.0f, 0.0f, bone, bouquet);
 
-	addObstacleAt({ 1.8f, 0.6f, 1.8f }, -1.0f, 3.0f, 0.0f, santasGrey, rum);
-	addObstacleAt({ 1.8f, 0.6f, 1.8f }, 5.0f, 3.0f, 0.0f, santasGrey, rum);
-	addObstacleAt({ 1.8f, 0.6f, 1.8f }, -5.0f, -5.0f, 0.0f, santasGrey, rum);
+	addObstacleAt({ 1.6f, 0.6f, 1.6f }, -1.0f, 3.0f, 0.0f, santasGrey, rum);
+	addObstacleAt({ 1.6f, 0.6f, 1.6f }, 5.0f, 3.0f, 0.0f, santasGrey, rum);
+	addObstacleAt({ 1.6f, 0.6f, 1.6f }, -5.0f, -5.0f, 0.0f, santasGrey, rum);
 
 	addObstacle({ 1.0f, 1.0f, 1.0f }, 1.0f, -1.0f, thatch, bouquet);
 	addObstacle({ 1.0f, 1.0f, 1.0f }, -3.0f, -1.0f, santasGrey, rum);
@@ -83,7 +83,7 @@ Grid::Grid(vec3::Vector3 gridSize, float cellSize, float cellPadding, const Reso
 	addObstacle({ 1.0f, 1.0f, 1.0f }, -5.0f, 1.0f, thatch, bouquet);
 	addObstacle({ 1.0f, 0.6f, 1.0f }, 5.0f, -5.0f, bone, bouquet);
 
-	addObstacleAt({ 2.4f, 0.8f, 0.6f }, 0.0f, 5.0f, 0.0f, cadetBlue, rum);
+	addObstacleAt({ 2.4f, 0.8f, 0.6f }, 0.0f, 5.0f, 0.0f, periwinkleGray_02, rum);
 
 	const float halfX = (gridSize.x * cellSize - cellPadding) * 0.5f;
 	const float halfZ = (gridSize.z * cellSize - cellPadding) * 0.5f;

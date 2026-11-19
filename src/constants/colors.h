@@ -18,5 +18,6 @@ inline constexpr const Color blackSqueeze = { 240, 246, 249, 255 };
 
 /* Octree Visualiser */
 inline constexpr const Color octreeCell = { 196, 62, 84, 255 }; 
-inline constexpr const Color octreeCellEdge = { 113, 38, 55, 255 };
+//inline constexpr const Color octreeCellEdge = { 113, 38, 55, 255 };
+inline constexpr const Color octreeCellEdge = { 255, 255, 255, 255 };
 inline constexpr const Color octreeHighlight = { 202, 240, 104, 255 };

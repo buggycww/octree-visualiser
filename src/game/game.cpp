@@ -3,9 +3,34 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstddef>
 #include <cstdio>
 
 #include "constants/colors.h"
+
+static void DrawDebugBackdrop(const char* line1, int size1,
+    const char* line2, int size2,
+    int x, int y, int lineGap)
+{
+    constexpr int pad = 8;
+
+    const int w1 = MeasureText(line1, size1);
+    const int w2 = MeasureText(line2, size2);
+
+    const int line1Bottom = y + size1;
+    const int line2Top = line1Bottom + lineGap;
+    const int line2Bottom = line2Top + size2;
+
+    const Rectangle panel{
+        static_cast<float>(x - pad),
+        static_cast<float>(y - pad),
+        static_cast<float>(std::max(w1, w2) + pad * 2),
+        static_cast<float>(line2Bottom - y + pad * 2)
+    };
+
+    DrawRectangleRounded(panel, 0.15f, 8, Fade(BLACK, 0.40f));
+    DrawRectangleRoundedLinesEx(panel, 0.15f, 8, 1.f, Fade(RAYWHITE, 0.20f));
+}
 
 Game::Game() : resources{}, grid(vec3::Vector3(14, 1, 14), 1.f, 0.05f, resources), player(vec3::Vector3(1.5f, 1.275f, 1.5f), resources)
 {
@@ -39,7 +64,7 @@ void Game::Run()
         Update(dt);
 
         BeginDrawing();
-        ClearBackground(periwinkleGray_02);
+        ClearBackground(santasGrey);
         BeginMode3D(camera);
         Draw();
         EndMode3D();
@@ -72,7 +97,14 @@ void Game::Input(float dt)
     pitch = std::clamp(pitch + pitchInput * cameraTurnSpeed * DEG2RAD * dt,
                        -85.f * DEG2RAD, 10.f * DEG2RAD);
 
-    // PLAYER MOVEMENT ================================================
+    // CAMERA ZOOM ====================================================
+    const float wheel = GetMouseWheelMove();
+    if (wheel != 0.f)
+    {
+        cameraDistance = std::clamp(cameraDistance - wheel * cameraZoomSpeed, 5.f, 25.f);
+    }
+
+    // PLAYER MOVEMENT =================================================
     player.Input(Forward(), Right());
 }
 
@@ -113,34 +145,40 @@ void Game::DrawVisualiserHud()
     const int surfaces = visualiser.GetSurfaceCount();
     const int obstacles = visualiser.GetObstacleCount();
     const int entries = visualiser.GetEntryCount();
+    const int ancestorCount = visualiser.GetAncestorCount();
+
+    char parentText[96] = "root";
+    if (ancestorCount > 0)
+    {
+        int written = std::snprintf(parentText, sizeof(parentText), "parents d%d",
+                                    visualiser.GetAncestorDepth(ancestorCount - 1));
+
+        for (int i = ancestorCount - 2; i >= 0; --i)
+        {
+            if (written < 0 || written >= static_cast<int>(sizeof(parentText))) break;
+            written += std::snprintf(parentText + written,
+                                     sizeof(parentText) - static_cast<std::size_t>(written),
+                                     ", d%d", visualiser.GetAncestorDepth(i));
+        }
+    }
 
     char text[256];
+    std::snprintf(text, sizeof(text),
+        "octree cell  |  depth %d (%s)  |  %.2f x %.2f x %.2f  |  %d stored  |  %d %s  |  %d %s",
+        visualiser.GetDepth(), parentText,
+        bounds.w, bounds.h, bounds.d,
+        entries,
+        surfaces, surfaces == 1 ? "surface" : "surfaces",
+        obstacles, obstacles == 1 ? "obstacle" : "obstacles");
 
-    if (visualiser.HasParent())
-    {
-        std::snprintf(text, sizeof(text),
-                      "octree cell  |  depth %d (parent %d)  |  %.2f x %.2f x %.2f  |  %d stored  |  %d %s  |  %d %s",
-                      visualiser.GetDepth(), visualiser.GetParentDepth(),
-                      bounds.w, bounds.h, bounds.d,
-                      entries,
-                      surfaces, surfaces == 1 ? "surface" : "surfaces",
-                      obstacles, obstacles == 1 ? "obstacle" : "obstacles");
-    }
-    else
-    {
-        std::snprintf(text, sizeof(text),
-                      "octree cell  |  depth %d (root)  |  %.2f x %.2f x %.2f  |  %d stored  |  %d %s  |  %d %s",
-                      visualiser.GetDepth(),
-                      bounds.w, bounds.h, bounds.d,
-                      entries,
-                      surfaces, surfaces == 1 ? "surface" : "surfaces",
-                      obstacles, obstacles == 1 ? "obstacle" : "obstacles");
-    }
+    constexpr const char* kControls =
+        "WASD move   |   SPACE jump   |   wheel zoom   |   Q/E tilt   |   PgUp/PgDn orbit";
+    constexpr int kX = 24, kY = 24, kGap = 8;
 
-    DrawText(text, 24, 24, 20, rum);
+    DrawDebugBackdrop(text, 20, kControls, 18, kX, kY, kGap);
 
-    DrawText("WASD move   |   SPACE jump   |   wheel zoom   |   Q/E tilt   |   PgUp/PgDn orbit",
-             24, 52, 18, Fade(rum, 0.75f));
+    DrawText(text, kX, kY, 20, RAYWHITE);   // was BLACK
+    DrawText(kControls, kX, kY + 20 + kGap, 18, LIGHTGRAY);
 }
 
 Vector3 Game::Forward() const
