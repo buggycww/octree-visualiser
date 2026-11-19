@@ -13,7 +13,7 @@ public:
 	void Draw();
 	void SetOutline(bool enabled);
 
-	// Every solid piece of level geometry: floor tiles and obstacles.
+	// static environment gameobjects
 	std::vector<GameObject*> GetColliders();
 
 	vec3::Vector3 GetGridSize() const { return gridSize; }
@@ -25,7 +25,6 @@ private:
 	std::vector<GroundCube> floor;
 	std::vector<GroundCube> obstacles;
 
-	// Invisible walls that keep the player on the floor. They take part in
-	// collision but are not drawn and are not surface-raycast targets.
+	// invisible walls
 	std::vector<GameObject> boundaries;
 };

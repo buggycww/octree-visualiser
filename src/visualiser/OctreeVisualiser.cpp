@@ -8,18 +8,14 @@
 
 namespace
 {
-	// Per-face opacity of the active cell's volume. The cube shows both its near
-	// and far faces, so the blended result ends up roughly twice this value.
-	constexpr float cellFillAlpha = 0.26f;
+	// parent node draw settings
+	constexpr float parentFillAlpha = 0.18f;
+	constexpr float parentEdgeAlpha = 0.5f;
+	constexpr float cellFillAlpha = 0.04f;
 
-	// The parent only provides context, so it is just a translucent outline.
-	constexpr float parentEdgeAlpha = 0.6f;
-
-	// Keeps the highlight shell just outside the stored box, so the two
-	// surfaces do not z-fight.
 	constexpr float highlightPadding = 0.035f;
 
-	// Floor tiles have translucent highlight
+	// for floor tiles
 	constexpr float surfaceAlpha = 0.55f;
 	constexpr float surfacePadding = 0.012f;
 
@@ -29,9 +25,6 @@ namespace
 		const Octree::OctNode* parent = nullptr;
 	};
 
-	// Walks down the branch containing the point and keeps the deepest node
-	// that stores entries itself. A node with no entries of its own is not
-	// visualised: its parent is where the geometry actually lives.
 	CellChain FindCell(const Octree::OctNode* node, const Octree::OctNode* parent,
 					   float x, float y, float z)
 	{
@@ -77,12 +70,9 @@ void OctreeVisualiser::Update(const vec3::Vector3& focus)
 	cell = chain.cell;
 	if (cell == nullptr) return;
 
-	// The root has no meaningful parent, so a depth-1 cell gets no parent box.
 	parentCell = (chain.parent != tree->getRoot()) ? chain.parent : nullptr;
 
-	// Only the entries stored in this node are highlighted. This is the same
-	// data the octree would return for a query that stops at this node, and it
-	// is why straddling objects appear in an ancestor's highlight set.
+	// Only entries stored in this node are highlighted
 	for (const Octree::Entry& entry : cell->entries)
 	{
 		GameObject* object = world->getOwner(entry.id);
@@ -97,8 +87,7 @@ void OctreeVisualiser::Draw() const
 {
 	if (cell == nullptr) return;
 
-	// Parent bounds first, as context. Its entries are deliberately not
-	// highlighted: they belong to the parent, not to the active node.
+	// Draw parent bounds first for context, but don't draw their entries
 	if (parentCell != nullptr)
 	{
 		const AABB& parentBounds = parentCell->bounds;
@@ -109,6 +98,11 @@ void OctreeVisualiser::Draw() const
 		};
 		const Vector3 parentSize{ parentBounds.w, parentBounds.h, parentBounds.d };
 
+		rlDisableDepthMask();
+		DrawCubeV(parentCenter, parentSize, Fade(octreeCell, parentFillAlpha));
+		rlDrawRenderBatchActive();
+		rlEnableDepthMask();
+
 		DrawCubeWiresV(parentCenter, parentSize, Fade(octreeCellEdge, parentEdgeAlpha));
 	}
 
@@ -116,10 +110,6 @@ void OctreeVisualiser::Draw() const
 	const Vector3 center{ bounds.centerX(), bounds.centerY(), bounds.centerZ() };
 	const Vector3 size{ bounds.w, bounds.h, bounds.d };
 
-	// raylib batches geometry and flushes it later, so the depth mask has to be
-	// restored only after the batch holding the translucent cube has been
-	// submitted. Without the explicit flush the cube would be replayed with
-	// depth writes enabled, hiding the far side of the volume.
 	rlDisableDepthMask();
 	DrawCubeV(center, size, Fade(octreeCell, cellFillAlpha));
 	rlDrawRenderBatchActive();

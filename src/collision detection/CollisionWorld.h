@@ -37,7 +37,6 @@ public:
 private:
     std::unique_ptr<Octree> tree;
 
-    // The octree stores an index into owners, keeping the tree independent of
-    // game types.
+    // The octree stores an index into owners, keeping the tree independent of game types.
     std::vector<GameObject*> owners;
 };

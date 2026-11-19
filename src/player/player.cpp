@@ -13,10 +13,7 @@ namespace
 	constexpr float jumpSpeed = 8.f;         // initial upward speed
 	constexpr float terminalVelocity = 25.f; // keeps falls tunnelling-free
 
-	// Horizontal movement is swept in fairly large steps; vertical movement is
-	// swept in fine ones. A coarse vertical step can stop a fall up to a full
-	// step above a surface and then keep failing to close the remaining gap,
-	// which leaves the player hovering and unable to jump.
+	// vertical movement is swept in tiny steps to revent imprecise falling logic
 	constexpr float horizontalStep = 0.2f;
 	constexpr float verticalStep = 0.01f;
 
@@ -35,11 +32,6 @@ namespace
 	}
 }
 
-void Player::Jump()
-{
-	bJumpRequested = true;
-}
-
 void Player::Update(float deltaTime)
 {
 	if (collision == nullptr)
@@ -54,15 +46,12 @@ void Player::Update(float deltaTime)
 		MoveWithCollision(direction * speed * deltaTime, *collision, horizontalStep);
 	}
 
-	// Gravity always runs, so walking off a ledge drops the player onto whatever
-	// is below and a jump is just a temporary upward velocity.
+	// apply velocity
 	verticalVelocity = std::max(verticalVelocity - gravity * deltaTime, -terminalVelocity);
 	const bool verticalMoveFree = MoveWithCollision(
 		vec3::Vector3{ 0.f, verticalVelocity * deltaTime, 0.f }, *collision, verticalStep);
 
-	// A downward move that is blocked means the player is standing on something.
-	// This is more reliable than probing below the feet: the probe could miss a
-	// narrow ledge or graze a wall the player is next to.
+	// downward move that is blocked means the player is standing on something
 	bIsGrounded = verticalVelocity <= 0.f && !verticalMoveFree;
 	if (bIsGrounded) verticalVelocity = 0.f;
 
@@ -84,6 +73,39 @@ void Player::Draw() const
 	GameObject::Draw();
 }
 
+void Player::Input(const Vector3 forward, const Vector3 right)
+{
+	// PLAYER MOVEMENT ================================================
+	const float forwardInput = float(IsKeyDown(KEY_W)) - float(IsKeyDown(KEY_S));
+	const float strafeInput = float(IsKeyDown(KEY_D)) - float(IsKeyDown(KEY_A));
+
+	vec3::Vector3 move = { 0.f, 0.f, 0.f };
+
+	if (forwardInput != 0.f || strafeInput != 0.f)
+	{
+		move.x = forward.x * forwardInput + right.x * strafeInput;
+		move.z = forward.z * forwardInput + right.z * strafeInput;
+
+		// Normalise, so W+D is not ~1.41x faster than W alone.
+		const float length = std::sqrt(move.x * move.x + move.z * move.z);
+		move.x /= length;
+		move.z /= length;
+	}
+
+	direction = move;
+
+	// JUMP ===========================================================
+	if (IsKeyPressed(KEY_SPACE))
+	{
+		Jump();
+	}
+}
+
+void Player::Jump()
+{
+	bJumpRequested = true;
+}
+
 bool Player::MoveWithCollision(const vec3::Vector3& delta, const CollisionWorld& world, float maxStep)
 {
 	const float length = std::sqrt(delta.x * delta.x + delta.y * delta.y + delta.z * delta.z);
@@ -95,19 +117,39 @@ bool Player::MoveWithCollision(const vec3::Vector3& delta, const CollisionWorld&
 
 	bool blocked = false;
 
+	const auto moveAxis = [&](int axis, float amount)
+	{
+		if (MoveAxis(axis, amount, world)) return;
+
+		blocked = true;
+
+		// The full step was blocked. Binary-search the furthest legal fraction
+		// so the player comes to rest exactly against the surface instead of
+		// stopping up to a whole step away from it.
+		float lo = 0.f;
+		float hi = amount;
+		for (int i = 0; i < 12; ++i)
+		{
+			const float mid = (lo + hi) * 0.5f;
+			if (CanMoveAxis(axis, mid, world)) lo = mid;
+			else hi = mid;
+		}
+
+		if (lo != 0.f) MoveAxis(axis, lo, world);
+	};
+
 	for (int i = 0; i < steps; ++i)
 	{
-		// Resolve one axis at a time so hitting a wall still allows sliding
-		// along it.
-		if (!MoveAxis(0, step.x, world)) blocked = true;
-		if (!MoveAxis(2, step.z, world)) blocked = true;
-		if (!MoveAxis(1, step.y, world)) blocked = true;
+		// Resolve one axis at a time so hitting a wall still allows sliding along it (doesn't block other axes).
+		moveAxis(0, step.x);
+		moveAxis(2, step.z);
+		moveAxis(1, step.y);
 	}
 
 	return !blocked;
 }
 
-bool Player::MoveAxis(int axis, float amount, const CollisionWorld& world)
+bool Player::CanMoveAxis(int axis, float amount, const CollisionWorld& world) const
 {
 	if (amount == 0.f) return true;
 
@@ -121,8 +163,20 @@ bool Player::MoveAxis(int axis, float amount, const CollisionWorld& world)
 	}
 
 	const AABB bounds = BoundsAt(next, colliderSize, colliderOffset);
-	if (world.overlaps(bounds)) return false;
+	return !world.overlaps(bounds);
+}
 
-	transform.position = next;
+bool Player::MoveAxis(int axis, float amount, const CollisionWorld& world)
+{
+	if (amount == 0.f) return true;
+	if (!CanMoveAxis(axis, amount, world)) return false;
+
+	switch (axis)
+	{
+	case 0: transform.position.x += amount; break;
+	case 1: transform.position.y += amount; break;
+	default: transform.position.z += amount; break;
+	}
+
 	return true;
 }

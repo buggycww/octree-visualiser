@@ -9,17 +9,14 @@
 
 // Octree broad phase for axis-aligned boxes in 3D.
 //
-//   - Changed from Quadtree: An entry stores its full AABB, not just a point. A large 
-//     box can overlap a query while its centre lies outside the query box, so points 
-//     alone are not enough to answer "which boxes overlap this volume".
+//   - Changed from Quadtree: An entry stores its full AABB, not just a point
 //   - A box is stored exactly once, in the deepest node that fully contains it.
 //     Boxes that straddle a split stay in the parent node. A query tests the
 //     entries of every visited node, so straddling boxes are still found.
 //   - The id is only an identity/handle. It lets the caller map a hit back to
 //     the owning game object without the tree knowing about game types.
 //
-// A quadtree's four quadrants become an octree's eight octants. An octant is
-// indexed by one bit per axis: bit 0 = positive X, bit 1 = positive Y,
+// An octant is indexed by one bit per axis: bit 0 = positive X, bit 1 = positive Y,
 // bit 2 = positive Z.
 class Octree {
     public:
@@ -60,7 +57,7 @@ class Octree {
         int getCapacity() const { return capacity; }
         int getMaxDepth() const { return maxDepth; }
 
-        // Diagnostics, useful for the debug overlay.
+        // Diagnostics for the debug overlay.
         int countNodes() const;
         int countEntries() const;
 

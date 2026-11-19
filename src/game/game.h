@@ -34,7 +34,6 @@ private:
     float cameraDistance = 14.f;        // orbit distance from the player
     float cameraTurnSpeed = 100.f;      // degrees per second
     float cameraZoomSpeed = 2.f;        // world units per wheel notch
-    float playerMoveSpeed = 5.f;        // units per second
 
     Resources resources;
     Grid grid;

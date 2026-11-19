@@ -27,8 +27,8 @@ struct Transform3D
 
 enum class OutlineStyle
 {
-	Silhouette,   // inverted hull around the mesh; good for round/organic shapes
-	Edges         // 12 box edges; suited to the unit-cube tile model
+	Silhouette,   // inverted hull around the mesh for round/organic shapes
+	Edges         // 12 box edges for unit-cube tile model
 };
 
 struct ModelAttachment
@@ -48,9 +48,9 @@ class GameObject
 public:
 	Transform3D transform;
 
-	// Local-space collision box, centred on colliderOffset. A zero size means
-	// "use the transform's unit cube". This keeps the visible scale free to
-	// differ from the collision size.
+	// Local-space collision box, centred on colliderOffset. 
+	// Enables collision to differ from visible scale.
+	// Keep zero to use transform's unit cube. 
 	vec3::Vector3 colliderSize{ 0.f };
 	vec3::Vector3 colliderOffset{ 0.f };
 
@@ -61,13 +61,7 @@ public:
 	float speed = 0.f;
 
 	bool bIsVisible = true;
-
-	// Marks gameplay obstacles (as opposed to floor tiles and the invisible
-	// level boundaries). The octree visualiser uses it to decide what to call
-	// out inside the active cell.
 	bool bIsObstacle = false;
-
-	// Marks the floor tiles that make up the walkable surface.
 	bool bIsSurface = false;
 
 	GameObject() = default;

@@ -88,7 +88,7 @@ void Octree::subdivide(OctNode* node) {
     const float middleZ = node->bounds.z + halfD;
 
     // Children are indexed by which side of each split they occupy:
-    // bit 0 = +X, bit 1 = +Y, bit 2 = +Z. This is the 3D counterpart of the
+    // bit 0 = +X, bit 1 = +Y, bit 2 = +Z. This is the 3D version of the
     // old NW/NE/SW/SE quadrant table.
     for (int i = 0; i < 8; i++) {
         const AABB childBounds{
@@ -103,7 +103,7 @@ void Octree::subdivide(OctNode* node) {
         node->children[i] = std::make_unique<OctNode>(childBounds, node->depth + 1);
     }
 
-    // Move entries that fit entirely inside one child down. Straddlers stay.
+    // Move entries that fit entirely inside one child down. If entry straddles, stay in parent node.
     std::vector<Entry> entries;
     entries.swap(node->entries);
 

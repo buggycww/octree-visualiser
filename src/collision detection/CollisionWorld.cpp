@@ -89,8 +89,7 @@ GameObject* CollisionWorld::getOwner(std::uint32_t id) const {
 void CollisionWorld::build(const std::vector<GameObject*>& objects) {
     clear();
 
-    // Fit the root to the level geometry. Padding keeps boxes on the map's
-    // maximum edges inside the root despite floating-point rounding.
+    // Fit the root to the level geometry
     float minX = 0.f, minY = 0.f, minZ = 0.f;
     float maxX = 0.f, maxY = 0.f, maxZ = 0.f;
     bool found = false;
@@ -122,19 +121,32 @@ void CollisionWorld::build(const std::vector<GameObject*>& objects) {
 
     if (!found) return;
 
-    constexpr float padding = 1.f;
+    // Align the root to the tile grid so that visualiser is more readable
+    constexpr float cell = 1.f;
+    const float centerX = std::round(((minX + maxX) * 0.5f) / cell) * cell;
+    const float centerZ = std::round(((minZ + maxZ) * 0.5f) / cell) * cell;
+    const float baseY = std::floor(minY / cell) * cell;
+
+    const float halfX = std::max(centerX - minX, maxX - centerX);
+    const float halfZ = std::max(centerZ - minZ, maxZ - centerZ);
+    const float required = std::max({ halfX * 2.f, halfZ * 2.f, maxY - baseY });
+
+    float rootSize = 1.f;
+    while (rootSize < required) rootSize *= 2.f;
+
     const AABB world{
-        minX - padding,
-        minY - padding,
-        minZ - padding,
-        (maxX - minX) + padding * 2.f,
-        (maxY - minY) + padding * 2.f,
-        (maxZ - minZ) + padding * 2.f
+        centerX - rootSize * 0.5f,
+        baseY,
+        centerZ - rootSize * 0.5f,
+        rootSize,
+        rootSize,
+        rootSize
     };
 
     constexpr int capacity = 4;
     constexpr int maxDepth = 10;
-    tree = std::make_unique<Octree>(world, capacity, maxDepth);
+    constexpr float minCell = 2.f;
+    tree = std::make_unique<Octree>(world, capacity, maxDepth, minCell, minCell, minCell);
 
     for (GameObject* obj : objects) {
         if (obj == nullptr || !hasVolume(*obj)) continue;

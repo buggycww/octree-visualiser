@@ -7,7 +7,7 @@
 
 #include "constants/colors.h"
 
-Game::Game() : resources{}, grid(vec3::Vector3(10, 1, 10), 1.f, 0.05f, resources), player(vec3::Vector3(1.5f, 1.275f, 1.5f), resources)
+Game::Game() : resources{}, grid(vec3::Vector3(14, 1, 14), 1.f, 0.05f, resources), player(vec3::Vector3(1.5f, 1.275f, 1.5f), resources)
 {
     assert(IsWindowReady() && "Game must be constructed after InitWindow()");
 
@@ -18,7 +18,7 @@ Game::Game() : resources{}, grid(vec3::Vector3(10, 1, 10), 1.f, 0.05f, resources
 
     yaw = 0.f;
     pitch = -45.f * DEG2RAD;
-    cameraDistance = 14.f;
+    cameraDistance = 17.f;
 
     // Static level geometry (floor and obstacles) never moves, so it is
     // indexed once here. The player queries this tree for collision.
@@ -53,16 +53,14 @@ void Game::Update(float dt)
     Input(dt);
 
     player.Update(dt);
-
-    // Follow after the player has moved, so the camera never lags a frame.
     UpdateCamera();
 
-    visualiser.Update(player.transform.position);
+    visualiser.Update(player.GetFootPosition());
 }
 
 void Game::Input(float dt)
 {
-    // ROTATION =======================================================
+    // CAMERA MOVEMENT ================================================
     // The camera orbits the player. Turning first means movement below uses
     // the direction the camera faces *now*.
     const float turnInput = float(IsKeyDown(KEY_PAGE_DOWN)) - float(IsKeyDown(KEY_PAGE_UP));
@@ -75,40 +73,7 @@ void Game::Input(float dt)
                        -85.f * DEG2RAD, 10.f * DEG2RAD);
 
     // PLAYER MOVEMENT ================================================
-    const float forwardInput = float(IsKeyDown(KEY_W)) - float(IsKeyDown(KEY_S));
-    const float strafeInput = float(IsKeyDown(KEY_D)) - float(IsKeyDown(KEY_A));
-
-    vec3::Vector3 move = { 0.f, 0.f, 0.f };
-
-    if (forwardInput != 0.f || strafeInput != 0.f)
-    {
-        const Vector3 forward = HorizontalForward();
-        const Vector3 right = Right();
-
-        move.x = forward.x * forwardInput + right.x * strafeInput;
-        move.z = forward.z * forwardInput + right.z * strafeInput;
-
-        // Normalise, so W+D is not ~1.41x faster than W alone.
-        const float length = std::sqrt(move.x * move.x + move.z * move.z);
-        move.x /= length;
-        move.z /= length;
-    }
-
-    player.direction = move;
-    player.speed = playerMoveSpeed;
-
-    // JUMP ===========================================================
-    if (IsKeyPressed(KEY_SPACE))
-    {
-        player.Jump();
-    }
-
-    // ZOOM ===========================================================
-    const float wheel = GetMouseWheelMove();
-    if (wheel != 0.f)
-    {
-        cameraDistance = std::clamp(cameraDistance - wheel * cameraZoomSpeed, 5.f, 25.f);
-    }
+    player.Input(Forward(), Right());
 }
 
 void Game::UpdateCamera()
@@ -136,9 +101,6 @@ void Game::Draw()
 {
     DrawGrid(15, 1);
     grid.Draw();
-
-    // Drawn before the player: the translucent volume would otherwise tint the
-    // player's own colours.
     visualiser.Draw();
     player.Draw();
 }

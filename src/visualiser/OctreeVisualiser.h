@@ -38,7 +38,7 @@ public:
 private:
 	const CollisionWorld* world = nullptr;
 	const Octree::OctNode* cell = nullptr;       // node whose entries are shown
-	const Octree::OctNode* parentCell = nullptr; // drawn for context, never highlighted
+	const Octree::OctNode* parentCell = nullptr; // drawn for context
 	std::vector<AABB> surfaces;
 	std::vector<AABB> obstacles;
 };

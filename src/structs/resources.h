@@ -5,7 +5,6 @@
 
 struct ModelAsset
 {
-	// handles its own unloading logic
 	explicit ModelAsset(Model model) : model(model) {}
 	~ModelAsset() { UnloadModel(model); }
 
@@ -24,6 +23,7 @@ struct Resources
 
 	// A Resources object owns GPU objects (Model/Mesh), so copying it would mean two
 	// objects claiming the same GPU handles and unloading them twice.
+	// Delete to prevent copying
 	Resources(const Resources&) = delete;
 	Resources& operator=(const Resources&) = delete;
 
