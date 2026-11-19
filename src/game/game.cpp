@@ -3,10 +3,11 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstdio>
 
 #include "constants/colors.h"
 
-Game::Game() : resources{}, grid(vec3::Vector3(10, 1, 10), 1.f, 0.05f, resources), player(vec3::Vector3(0.f, 1.3f, 0.f), resources)
+Game::Game() : resources{}, grid(vec3::Vector3(10, 1, 10), 1.f, 0.05f, resources), player(vec3::Vector3(1.5f, 1.275f, 1.5f), resources)
 {
     assert(IsWindowReady() && "Game must be constructed after InitWindow()");
 
@@ -24,6 +25,7 @@ Game::Game() : resources{}, grid(vec3::Vector3(10, 1, 10), 1.f, 0.05f, resources
     collision.build(grid.GetColliders());
     player.SetCollisionWorld(&collision);
     player.SetCamera(&camera);
+    visualiser.SetWorld(&collision);
 
     UpdateCamera();
 }
@@ -41,6 +43,7 @@ void Game::Run()
         BeginMode3D(camera);
         Draw();
         EndMode3D();
+        DrawVisualiserHud();
         EndDrawing();
     }
 }
@@ -53,6 +56,8 @@ void Game::Update(float dt)
 
     // Follow after the player has moved, so the camera never lags a frame.
     UpdateCamera();
+
+    visualiser.Update(player.transform.position);
 }
 
 void Game::Input(float dt)
@@ -92,6 +97,12 @@ void Game::Input(float dt)
     player.direction = move;
     player.speed = playerMoveSpeed;
 
+    // JUMP ===========================================================
+    if (IsKeyPressed(KEY_SPACE))
+    {
+        player.Jump();
+    }
+
     // ZOOM ===========================================================
     const float wheel = GetMouseWheelMove();
     if (wheel != 0.f)
@@ -125,7 +136,49 @@ void Game::Draw()
 {
     DrawGrid(15, 1);
     grid.Draw();
+
+    // Drawn before the player: the translucent volume would otherwise tint the
+    // player's own colours.
+    visualiser.Draw();
     player.Draw();
+}
+
+void Game::DrawVisualiserHud()
+{
+    if (!visualiser.HasCell()) return;
+
+    const AABB bounds = visualiser.GetCellBounds();
+    const int surfaces = visualiser.GetSurfaceCount();
+    const int obstacles = visualiser.GetObstacleCount();
+    const int entries = visualiser.GetEntryCount();
+
+    char text[256];
+
+    if (visualiser.HasParent())
+    {
+        std::snprintf(text, sizeof(text),
+                      "octree cell  |  depth %d (parent %d)  |  %.2f x %.2f x %.2f  |  %d stored  |  %d %s  |  %d %s",
+                      visualiser.GetDepth(), visualiser.GetParentDepth(),
+                      bounds.w, bounds.h, bounds.d,
+                      entries,
+                      surfaces, surfaces == 1 ? "surface" : "surfaces",
+                      obstacles, obstacles == 1 ? "obstacle" : "obstacles");
+    }
+    else
+    {
+        std::snprintf(text, sizeof(text),
+                      "octree cell  |  depth %d (root)  |  %.2f x %.2f x %.2f  |  %d stored  |  %d %s  |  %d %s",
+                      visualiser.GetDepth(),
+                      bounds.w, bounds.h, bounds.d,
+                      entries,
+                      surfaces, surfaces == 1 ? "surface" : "surfaces",
+                      obstacles, obstacles == 1 ? "obstacle" : "obstacles");
+    }
+
+    DrawText(text, 24, 24, 20, rum);
+
+    DrawText("WASD move   |   SPACE jump   |   wheel zoom   |   Q/E tilt   |   PgUp/PgDn orbit",
+             24, 52, 18, Fade(rum, 0.75f));
 }
 
 Vector3 Game::Forward() const

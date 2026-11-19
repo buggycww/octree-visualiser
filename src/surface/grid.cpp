@@ -28,6 +28,7 @@ Grid::Grid(vec3::Vector3 gridSize, float cellSize, float cellPadding, const Reso
 			{
 				vec3::Vector3 pos = vec3::Vector3(cols * cellSize, height * cellSize, rows * cellSize) - offset;
 				GroundCube cube = GroundCube(scale, pos, albescentWhite, bouquet, res);
+				cube.bIsSurface = true;
 				floor.push_back(cube);
 			}
 		}
@@ -37,28 +38,67 @@ Grid::Grid(vec3::Vector3 gridSize, float cellSize, float cellPadding, const Reso
 	// doubles as their collider, so the octree can index them without extra data.
 	const float surfaceY = gridSize.y * cellSize - cellPadding * 0.5f;
 
-	auto addObstacle = [&](vec3::Vector3 size, float x, float z, Color color, Color outlineColor)
+	auto addObstacleAt = [&](vec3::Vector3 size, float x, float z, float bottom,
+							 Color color, Color outlineColor)
 	{
 		const vec3::Vector3 pos = {
 			x,
-			surfaceY + size.y * 0.5f,
+			surfaceY + bottom + size.y * 0.5f,
 			z
 		};
 		obstacles.push_back(GroundCube(size, pos, color, outlineColor, res));
+		obstacles.back().bIsObstacle = true;
 	};
 
-	obstacles.reserve(4);
-	addObstacle({ 1.5f, 2.0f, 1.5f }, -2.5f, -1.5f, cadetBlue, rum);
-	addObstacle({ 1.0f, 1.0f, 2.5f }, 2.5f, 1.0f, thatch, bouquet);
-	addObstacle({ 1.2f, 1.5f, 1.2f }, 0.5f, -3.0f, santasGrey, rum);
-	addObstacle({ 2.0f, 0.8f, 1.0f }, 2.0f, -3.0f, bone, bouquet);
+	auto addObstacle = [&](vec3::Vector3 size, float x, float z, Color color, Color outlineColor)
+	{
+		addObstacleAt(size, x, z, 0.f, color, outlineColor);
+	};
+
+	obstacles.reserve(20);
+
+	// Ground-level blocks and crates. Their varied heights are what gives the
+	// octree something to subdivide in Y as well as in X/Z.
+	addObstacle({ 1.4f, 2.0f, 1.4f }, -2.7f, -1.8f, cadetBlue, rum);
+	addObstacle({ 1.0f, 1.0f, 2.2f }, 2.6f, 1.2f, thatch, bouquet);
+	addObstacle({ 1.2f, 1.5f, 1.2f }, 0.4f, -3.2f, santasGrey, rum);
+	addObstacle({ 1.8f, 0.8f, 1.0f }, 2.0f, -3.4f, bone, bouquet);
+	addObstacle({ 1.0f, 3.0f, 1.0f }, -4.2f, -3.6f, santasGrey, rum);
+	addObstacle({ 1.0f, 1.0f, 1.0f }, 4.3f, 1.2f, bone, bouquet);
+	addObstacle({ 1.0f, 1.0f, 1.0f }, 4.3f, -0.2f, thatch, bouquet);
+	addObstacle({ 0.8f, 0.6f, 0.8f }, -1.2f, -4.2f, cadetBlue, rum);
+	addObstacle({ 1.0f, 1.0f, 1.0f }, 2.8f, 4.4f, thatch, bouquet);
+	addObstacle({ 0.8f, 1.0f, 0.8f }, 1.0f, -0.6f, bone, bouquet);
+
+	// Three-tier terrace in the front-left corner. Each tier is one unit above
+	// the previous one, so the player can jump from the floor to the first and
+	// climb the rest.
+	addObstacleAt({ 4.0f, 1.0f, 2.6f }, -2.6f, 3.6f, 0.0f, bone, bouquet);
+	addObstacleAt({ 2.4f, 1.0f, 1.4f }, -3.2f, 4.0f, 1.0f, cadetBlue, rum);
+	addObstacleAt({ 1.2f, 1.0f, 0.8f }, -3.6f, 4.2f, 2.0f, santasGrey, rum);
+	addObstacleAt({ 1.0f, 1.0f, 1.0f }, -1.2f, 4.2f, 1.0f, thatch, bouquet);
+	addObstacleAt({ 1.0f, 1.0f, 1.0f }, -1.4f, 3.0f, 1.0f, santasGrey, rum);
+
+	// Raised platform and a tall corner tower on the back-right side. Crates on
+	// the platform bridge the last jump to the tower top.
+	addObstacleAt({ 2.2f, 1.0f, 2.2f }, 3.6f, -2.2f, 0.0f, bone, bouquet);
+	addObstacleAt({ 1.0f, 1.0f, 1.0f }, 3.2f, -2.6f, 1.0f, thatch, bouquet);
+	addObstacleAt({ 1.0f, 1.0f, 1.0f }, 4.2f, -2.8f, 1.0f, santasGrey, rum);
+	addObstacleAt({ 1.0f, 3.0f, 1.0f }, 4.4f, -4.2f, 0.0f, cadetBlue, rum);
+
+	// A block stacked on the second tier, level with the top tier. It gives the
+	// upper octree cells on the east side something to hold, so climbing does
+	// not always flatten the visualised cell back to the whole quadrant.
+	addObstacleAt({ 0.7f, 1.0f, 0.7f }, -2.3f, 3.8f, 2.0f, bone, bouquet);
 
 	// Keep the player on the level. The walls are just collision volumes, so
-	// they never appear in the scene or block the mouse ray.
+	// they never appear in the scene or block the mouse ray. They are deliberately
+	// taller than the highest platform plus a jump, so a leaping player cannot
+	// leave the map.
 	const float halfX = (gridSize.x * cellSize - cellPadding) * 0.5f;
 	const float halfZ = (gridSize.z * cellSize - cellPadding) * 0.5f;
 	constexpr float wallThickness = 0.5f;
-	constexpr float wallHeight = 3.f;
+	constexpr float wallHeight = 12.f;
 	const float wallY = surfaceY + wallHeight * 0.5f;
 
 	auto addBoundary = [&](float x, float z, vec3::Vector3 size)

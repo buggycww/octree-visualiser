@@ -14,9 +14,11 @@ bool hasExplicitCollider(const GameObject& obj) {
 
 // World-space AABB of a GameObject.
 //
-// A GameObject's transform describes a unit cube: scale gives its full size,
-// rotation rotates it and position places its centre. When an explicit local
-// collider is set, that box is used instead, still in the object's local space.
+// A GameObject's transform describes the following:
+// 1. scale: full size
+// 2. rotation rotates it
+// 3. position: world position, pivot at centre.
+// if local collider is set, that box is used instead, still in the object's local space.
 // The eight corners are transformed and the smallest enclosing axis-aligned
 // box is returned, so rotated and parented objects get correct bounds.
 AABB colliderBounds(const GameObject& obj) {
@@ -76,6 +78,14 @@ void CollisionWorld::clear() {
     owners.clear();
 }
 
+AABB CollisionWorld::boundsOf(const GameObject& object) {
+    return colliderBounds(object);
+}
+
+GameObject* CollisionWorld::getOwner(std::uint32_t id) const {
+    return id < owners.size() ? owners[id] : nullptr;
+}
+
 void CollisionWorld::build(const std::vector<GameObject*>& objects) {
     clear();
 
@@ -122,7 +132,7 @@ void CollisionWorld::build(const std::vector<GameObject*>& objects) {
         (maxZ - minZ) + padding * 2.f
     };
 
-    constexpr int capacity = 8;
+    constexpr int capacity = 4;
     constexpr int maxDepth = 10;
     tree = std::make_unique<Octree>(world, capacity, maxDepth);
 

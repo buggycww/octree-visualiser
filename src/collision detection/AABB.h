@@ -5,13 +5,7 @@
 // Stored as a minimum corner plus full extents:
 //     x, y, z  = minimum corner
 //     w, h, d  = full width, height and depth
-//
-// Boundary convention: half-open intervals
-//     [x, x+w) x [y, y+h) x [z, z+d)
-//   - The minimum faces are inside.
-//   - The maximum faces are outside.
-// Two boxes that only touch along a face, edge or corner are therefore not
-// considered overlapping.
+// Two boxes that only touch along a face, edge or corner are not considered overlapping.
 struct AABB {
     float x = 0.f, y = 0.f, z = 0.f;
     float w = 0.f, h = 0.f, d = 0.f;

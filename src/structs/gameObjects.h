@@ -62,6 +62,14 @@ public:
 
 	bool bIsVisible = true;
 
+	// Marks gameplay obstacles (as opposed to floor tiles and the invisible
+	// level boundaries). The octree visualiser uses it to decide what to call
+	// out inside the active cell.
+	bool bIsObstacle = false;
+
+	// Marks the floor tiles that make up the walkable surface.
+	bool bIsSurface = false;
+
 	GameObject() = default;
 	virtual ~GameObject() = default;
 

@@ -7,6 +7,7 @@
 #include "collision detection/CollisionWorld.h"
 #include "player/player.h"
 #include "structs/vec3.h"
+#include "visualiser/OctreeVisualiser.h"
 
 class Game
 {
@@ -19,6 +20,7 @@ private:
     void Update(float dt);
     void Input(float dt);
     void Draw();
+    void DrawVisualiserHud();
     void UpdateCamera();
 
     // Camera basis, derived from yaw/pitch.
@@ -38,6 +40,7 @@ private:
     Grid grid;
     CollisionWorld collision;
     Player player;
+    OctreeVisualiser visualiser;
 };
 
 // Runs a single game session: builds the Game, plays until the window closes,

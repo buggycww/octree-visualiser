@@ -25,6 +25,15 @@ public:
     int nodeCount() const { return tree ? tree->countNodes() : 0; }
     int entryCount() const { return tree ? tree->countEntries() : 0; }
 
+    // Read-only view of the tree, used by the debug visualiser.
+    const Octree* getTree() const { return tree.get(); }
+
+    // Resolves an entry id back to the object it was built from.
+    GameObject* getOwner(std::uint32_t id) const;
+
+    // World-space collider bounds of an object: the same box the tree stores.
+    static AABB boundsOf(const GameObject& object);
+
 private:
     std::unique_ptr<Octree> tree;
 

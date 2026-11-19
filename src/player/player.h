@@ -36,13 +36,20 @@ public:
 	virtual void Update(float deltaTime) override;
 	virtual void Draw() const override;
 
+	// Requests a jump. The request is consumed on the next update if the player
+	// is standing on something solid.
+	void Jump();
+
 	void SetCamera(Camera3D* camera) { cam = camera; }
 	void SetCollisionWorld(const CollisionWorld* world) { collision = world; }
 
 private:
-	void MoveWithCollision(const vec3::Vector3& delta, const CollisionWorld& world);
-	void MoveAxis(int axis, float amount, const CollisionWorld& world);
+	bool MoveWithCollision(const vec3::Vector3& delta, const CollisionWorld& world, float maxStep);
+	bool MoveAxis(int axis, float amount, const CollisionWorld& world);
 
 	const Camera3D* cam = nullptr;
 	const CollisionWorld* collision = nullptr;
+	float verticalVelocity = 0.f;
+	bool bIsGrounded = false;
+	bool bJumpRequested = false;
 };

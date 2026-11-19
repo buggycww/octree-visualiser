@@ -46,7 +46,7 @@ endif()
 project ("octree-visualiser")
 
 # Add source to this project's executable.
-add_executable (octree-visualiser "src/main.cpp"  "src/surface/grid.h" "src/surface/grid.cpp" "src/structs/vec3.h" "src/structs/gameObjects.h" "src/structs/gameObjects.cpp" "src/structs/resources.h" "src/constants/colors.h" "src/game/game.h" "src/game/game.cpp"  "src/player/player.h" "src/player/player.cpp"  "src/surface/groundCube.h"  "src/collision detection/AABB.h" "src/collision detection/CollisionWorld.cpp" "src/collision detection/CollisionWorld.h" "src/collision detection/Octree.cpp" "src/collision detection/Octree.h")
+add_executable (octree-visualiser "src/main.cpp"  "src/surface/grid.h" "src/surface/grid.cpp" "src/structs/vec3.h" "src/structs/gameObjects.h" "src/structs/gameObjects.cpp" "src/structs/resources.h" "src/constants/colors.h" "src/game/game.h" "src/game/game.cpp"  "src/player/player.h" "src/player/player.cpp"  "src/surface/groundCube.h"  "src/collision detection/AABB.h" "src/collision detection/CollisionWorld.cpp" "src/collision detection/CollisionWorld.h" "src/collision detection/Octree.cpp" "src/collision detection/Octree.h" "src/visualiser/OctreeVisualiser.h" "src/visualiser/OctreeVisualiser.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET octree-visualiser PROPERTY CXX_STANDARD 20)

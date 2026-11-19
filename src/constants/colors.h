@@ -15,3 +15,8 @@ inline constexpr const Color cadetBlue = { 162, 165, 195, 255 };
 inline constexpr const Color periwinkleGray_01 = { 196, 199, 228, 255 };
 inline constexpr const Color periwinkleGray_02 = { 208, 221, 236, 255 };
 inline constexpr const Color blackSqueeze = { 240, 246, 249, 255 };
+
+/* Octree Visualiser */
+inline constexpr const Color octreeCell = { 196, 62, 84, 255 };        // warm rose, drawn translucent
+inline constexpr const Color octreeCellEdge = { 113, 38, 55, 255 };    // deep wine, readable on the pale floor
+inline constexpr const Color octreeHighlight = { 202, 240, 104, 255 }; // chartreuse, obstacles in the cell
