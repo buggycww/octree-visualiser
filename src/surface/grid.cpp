@@ -83,7 +83,7 @@ Grid::Grid(vec3::Vector3 gridSize, float cellSize, float cellPadding, const Reso
 	addObstacle({ 1.0f, 1.0f, 1.0f }, -5.0f, 1.0f, thatch, bouquet);
 	addObstacle({ 1.0f, 0.6f, 1.0f }, 5.0f, -5.0f, bone, bouquet);
 
-	addObstacleAt({ 2.4f, 0.8f, 0.6f }, 0.0f, 5.0f, 0.0f, periwinkleGray_02, rum);
+	addObstacleAt({ 2.4f, 1.3f, 0.6f }, 0.0f, 5.0f, 0.0f, periwinkleGray_02, rum);
 
 	const float halfX = (gridSize.x * cellSize - cellPadding) * 0.5f;
 	const float halfZ = (gridSize.z * cellSize - cellPadding) * 0.5f;
